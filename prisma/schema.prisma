@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Requirement {
+  id                    String   @id @default(cuid())
+  userId                String?
+  taskTitle             String
+  taskDescription       String
+  skillsRequired        String[]
+  experience            String
+  budgetMin             Float?
+  budgetMax             Float?
+  budgetCurrency        String?
+  durationValue         Int?
+  durationUnit          String?
+  preferredCharacteristics String[]
+  mustHaveSkills        String[]
+  niceToHaveSkills      String[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  sessions              ConversationSession[]
+
+  @@index([userId])
+}
+
+model ConversationSession {
+  id             String   @id @default(cuid())
+  userId         String?
+  requirementId  String?
+  startedAt      DateTime @default(now())
+  endedAt        DateTime?
+  status         String   @default("active")
+
+  requirement    Requirement? @relation(fields: [requirementId], references: [id])
+  messages       ConversationMessage[]
+
+  @@index([userId])
+  @@index([requirementId])
+}
+
+model ConversationMessage {
+  id                String   @id @default(cuid())
+  sessionId         String
+  role              String
+  content           String   @db.Text
+  audioTranscript   String?  @db.Text
+  timestamp         DateTime @default(now())
+
+  session           ConversationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
